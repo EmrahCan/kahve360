@@ -6,7 +6,7 @@ const LogoTest = () => {
   const logos = [
     { id: 1, name: 'Starbucks', path: '/starbucks.png' },
     { id: 2, name: 'Gloria Jeans', path: '/gloriajeans.png' },
-    { id: 3, name: 'Caribou Coffee', path: '/caribou.png' },
+    { id: 3, name: 'Caribou Coffee', path: '/caribou.png', altPath: '/cariboucoffee.png' },
     { id: 4, name: 'Coffee Lab', path: '/coffeelab.png' },
     { id: 5, name: 'Tchibo', path: '/tchibo.png' },
     { id: 6, name: 'Espresso Lab', path: '/espressolab.png' },
@@ -26,11 +26,17 @@ const LogoTest = () => {
                 <img 
                   src={logo.path}
                   alt={`${logo.name} logosu`}
-                  className="w-20 h-20 object-contain"
+                  className="w-20 h-20 object-contain p-2"
+                  loading="eager"
                   onError={(e) => {
-                    // Logo yüklenemezse ilk harfi göster
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = `<div class="font-bold text-3xl text-primary">${logo.name.charAt(0)}</div>`;
+                    // Alternatif yol varsa onu dene
+                    if ('altPath' in logo && logo.altPath) {
+                      (e.target as HTMLImageElement).src = logo.altPath as string;
+                    } else {
+                      // Logo yüklenemezse ilk harfi göster
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      e.currentTarget.parentElement!.innerHTML = `<div class="font-bold text-3xl text-primary">${logo.name.charAt(0)}</div>`;
+                    }
                   }}
                 />
               </div>

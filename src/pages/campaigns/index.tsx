@@ -211,8 +211,13 @@ export default function Campaigns() {
                             className="w-4 h-4 object-contain p-0.5"
                             loading="eager"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                              e.currentTarget.parentElement!.innerHTML = `${brand.name.charAt(0)}`;
+                              // Caribou Coffee için özel durum
+                              if (brand.name === 'Caribou Coffee') {
+                                (e.target as HTMLImageElement).src = '/caribou.png';
+                              } else {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                e.currentTarget.parentElement!.innerHTML = `${brand.name.charAt(0)}`;
+                              }
                             }}
                           />
                         </span>
