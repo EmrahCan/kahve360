@@ -166,7 +166,8 @@ export default function Loyalty() {
                               <img 
                                 src={card.logo} 
                                 alt={`${card.brand} logosu`}
-                                className="w-8 h-8 object-contain"
+                                className="w-8 h-8 object-contain p-1"
+                                loading="eager"
                                 onError={(e) => {
                                   // Logo yüklenemezse ilk harfi göster
                                   (e.target as HTMLImageElement).style.display = 'none';

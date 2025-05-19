@@ -208,7 +208,8 @@ export default function Campaigns() {
                           <img 
                             src={`/${brand.name.toLowerCase().replace(/ /g, '')}.png`} 
                             alt={`${brand.name} logosu`}
-                            className="w-4 h-4 object-contain"
+                            className="w-4 h-4 object-contain p-0.5"
+                            loading="eager"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = 'none';
                               e.currentTarget.parentElement!.innerHTML = `${brand.name.charAt(0)}`;

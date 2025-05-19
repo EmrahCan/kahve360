@@ -87,11 +87,12 @@ export default function Home() {
                           <img 
                             src="/starbucks.png" 
                             alt="Starbucks logosu"
-                            className="w-8 h-8 object-contain"
+                            className="w-8 h-8 object-contain p-1"
+                            loading="eager"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = 'none';
                               e.currentTarget.parentElement!.innerHTML = `<div class="text-white font-bold">S</div>`;
-                              e.currentTarget.parentElement!.classList.add('bg-[#006241]');
+                              e.currentTarget.parentElement!.classList.add('bg-primary');
                             }}
                           />
                         </div>
@@ -124,7 +125,8 @@ export default function Home() {
                           <img 
                             src="/gloriajeans.png" 
                             alt="Gloria Jeans logosu"
-                            className="w-8 h-8 object-contain"
+                            className="w-8 h-8 object-contain p-1"
+                            loading="eager"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = 'none';
                               e.currentTarget.parentElement!.innerHTML = `<div class="text-white font-bold">G</div>`;
@@ -228,7 +230,8 @@ export default function Home() {
                           <img 
                             src={brand.logo}
                             alt={`${brand.name} logosu`}
-                            className="w-12 h-12 object-contain"
+                            className="w-12 h-12 object-contain p-1"
+                            loading="eager"
                             onError={(e) => {
                               // Logo yüklenemezse ilk harfi göster
                               (e.target as HTMLImageElement).style.display = 'none';

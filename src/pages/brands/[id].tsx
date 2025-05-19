@@ -176,7 +176,8 @@ export default function BrandDetail() {
                     <img 
                       src={brand.logo} 
                       alt={`${brand.name} logosu`}
-                      className="w-16 h-16 object-contain"
+                      className="w-16 h-16 object-contain p-1"
+                      loading="eager"
                       onError={(e) => {
                         // Logo yüklenemezse ilk harfi göster
                         (e.target as HTMLImageElement).style.display = 'none';
