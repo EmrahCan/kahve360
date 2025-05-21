@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
+import { useState } from 'react';
+import Map, { Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Not: Gerçek uygulamada bu API anahtarı çevresel değişkenlerden alınmalıdır
-// Bu sadece demo amaçlıdır
-mapboxgl.accessToken = 'pk.eyJ1Ijoia2FodmUzNjAiLCJhIjoiY2xzYW1wbGVrZXkiOiJzYW1wbGVtYXBib3hhcGlrZXkifQ.samplekey';
+// Mapbox API anahtarı - CafeConnect hesabının token'ı
+const MAPBOX_TOKEN = 'pk.eyJ1IjoiY2FmZWNvbm5lY3QiLCJhIjoiY21heWJ2aDBiMDh2eDJrcXptZTRmYzUyYiJ9.Tt36Frt7ppNSHUeRJ9bqcw';
 
 interface MapLocation {
   id: number;
@@ -25,120 +24,120 @@ interface MapViewProps {
 
 const MapView = ({ 
   locations, 
-  center = [29.0111, 41.0811], // İstanbul varsayılan merkez
+  center = [29.0111, 41.0811], // İstanbul varsayılan merkez (longitude, latitude)
   zoom = 13,
   onMarkerClick 
 }: MapViewProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markers = useRef<mapboxgl.Marker[]>([]);
-
-  // Haritayı başlat
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: center,
-      zoom: zoom
-    });
-
-    // Navigasyon kontrollerini ekle
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    
-    // Kullanıcı konumu kontrolü
-    map.current.addControl(
-      new mapboxgl.GeolocateControl({
-        positionOptions: {
-          enableHighAccuracy: true
-        },
-        trackUserLocation: true
-      })
-    );
-
-    // Temizleme işlemi
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
-  // Konumları haritaya ekle
-  useEffect(() => {
-    if (!map.current) return;
-
-    // Önceki işaretçileri temizle
-    markers.current.forEach(marker => marker.remove());
-    markers.current = [];
-
-    // Yeni işaretçileri ekle
-    locations.forEach(location => {
-      // Özel işaretçi elementi oluştur
-      const el = document.createElement('div');
-      el.className = 'marker';
-      el.style.width = '30px';
-      el.style.height = '30px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = location.isOpen ? '#D4A574' : '#ccc';
-      el.style.border = '3px solid white';
-      el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-      el.style.cursor = 'pointer';
-      el.style.display = 'flex';
-      el.style.alignItems = 'center';
-      el.style.justifyContent = 'center';
-      el.style.fontWeight = 'bold';
-      el.style.color = 'white';
-      el.style.fontSize = '12px';
-      el.innerText = location.brand.charAt(0);
-
-      // Popup oluştur
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
-        <div style="padding: 8px;">
-          <h3 style="font-weight: bold; margin-bottom: 4px;">${location.brand} - ${location.name}</h3>
-          <p style="font-size: 12px; margin-bottom: 4px;">${location.address}</p>
-          <p style="font-size: 12px; color: ${location.isOpen ? 'green' : 'red'};">
-            ${location.isOpen ? 'Açık' : 'Kapalı'}
-          </p>
-        </div>
-      `);
-
-      // İşaretçi oluştur ve haritaya ekle
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([location.lng, location.lat])
-        .setPopup(popup)
-        .addTo(map.current!);
-
-      // Tıklama olayını ekle
-      el.addEventListener('click', () => {
-        if (onMarkerClick) {
-          onMarkerClick(location);
-        }
-      });
-
-      // İşaretçiyi referansa ekle
-      markers.current.push(marker);
-    });
-
-    // Haritayı işaretçileri içerecek şekilde ayarla (eğer işaretçi varsa)
-    if (locations.length > 0 && map.current) {
-      const bounds = new mapboxgl.LngLatBounds();
-      
-      locations.forEach(location => {
-        bounds.extend([location.lng, location.lat]);
-      });
-      
-      map.current.fitBounds(bounds, {
-        padding: 50,
-        maxZoom: 15
-      });
-    }
-  }, [locations, onMarkerClick]);
-
+  const [popupInfo, setPopupInfo] = useState<MapLocation | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
+  
+  // Konsola API anahtarını yazdır (hata ayıklama için)
+  console.log('Mapbox API Key:', MAPBOX_TOKEN);
+  
   return (
-    <div ref={mapContainer} className="h-full w-full rounded-lg" />
+    <div className="h-full w-full rounded-lg">
+      {mapError ? (
+        <div className="flex items-center justify-center h-full w-full bg-gray-100 rounded-lg">
+          <div className="text-center p-4">
+            <p className="text-red-500 font-medium mb-2">Harita yüklenirken bir hata oluştu:</p>
+            <p className="text-gray-700">{mapError}</p>
+          </div>
+        </div>
+      ) : (
+        <Map
+          mapboxAccessToken={MAPBOX_TOKEN}
+          initialViewState={{
+            longitude: center[0],
+            latitude: center[1],
+            zoom: zoom
+          }}
+          style={{ width: '100%', height: '100%', borderRadius: '0.5rem' }}
+          mapStyle="mapbox://styles/mapbox/streets-v12"
+          onLoad={() => {
+            console.log('Harita başarıyla yüklendi');
+            setMapLoaded(true);
+          }}
+          onError={(e: any) => {
+            console.error('Harita yükleme hatası:', e);
+            setMapError(e.error?.message || 'Harita yüklenemedi. Lütfen daha sonra tekrar deneyin.');
+          }}
+        >
+        {/* Navigasyon kontrolleri */}
+        <NavigationControl position="top-right" />
+        <GeolocateControl 
+          position="top-right" 
+          positionOptions={{ enableHighAccuracy: true }}
+          trackUserLocation
+        />
+        
+        {/* Konum işaretçileri */}
+        {locations.map(location => (
+          <Marker 
+            key={location.id}
+            longitude={location.lng}
+            latitude={location.lat}
+            anchor="center"
+            onClick={e => {
+              // Tıklama olayını durdur
+              e.originalEvent.stopPropagation();
+              setPopupInfo(location);
+              if (onMarkerClick) {
+                onMarkerClick(location);
+              }
+            }}
+          >
+            <div 
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '50%',
+                backgroundColor: location.isOpen ? '#D4A574' : '#ccc',
+                border: '3px solid white',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                color: 'white',
+                fontSize: '12px'
+              }}
+            >
+              {location.brand.charAt(0)}
+            </div>
+          </Marker>
+        ))}
+        
+        {/* Popup bilgisi */}
+        {popupInfo && (
+          <Popup
+            anchor="top"
+            longitude={popupInfo.lng}
+            latitude={popupInfo.lat}
+            onClose={() => setPopupInfo(null)}
+            closeOnClick={false}
+            offset={25}
+          >
+            <div style={{ padding: '8px' }}>
+              <h3 style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                {popupInfo.brand} - {popupInfo.name}
+              </h3>
+              <p style={{ fontSize: '12px', marginBottom: '4px' }}>
+                {popupInfo.address}
+              </p>
+              <p style={{ 
+                fontSize: '12px', 
+                color: popupInfo.isOpen ? 'green' : 'red'
+              }}>
+                {popupInfo.isOpen ? 'Açık' : 'Kapalı'}
+              </p>
+            </div>
+          </Popup>
+        )}
+      </Map>
+      )}
+    </div>
   );
 };
 
