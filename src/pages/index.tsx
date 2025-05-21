@@ -10,7 +10,7 @@ const brands = [
   { id: 1, name: 'Starbucks', logo: '/starbucks.png', points: 450, campaigns: 5 },
   { id: 2, name: 'Gloria Jeans', logo: '/gloriajeans.png', points: 320, campaigns: 3 },
   { id: 3, name: 'Caribou Coffee', logo: '/caribou.png', points: 180, campaigns: 2 },
-  { id: 4, name: 'Coffee Lab', logo: '/coffeelab.png', points: 210, campaigns: 4 },
+  { id: 4, name: 'Kahve Dünyası', logo: '/kahvedunyasi.png', points: 210, campaigns: 4 },
   { id: 5, name: 'Tchibo', logo: '/tchibo.png', points: 150, campaigns: 2 },
   { id: 6, name: 'Espresso Lab', logo: '/espressolab.png', points: 280, campaigns: 3 },
 ];
@@ -35,7 +35,7 @@ const campaigns = [
   },
   { 
     id: 3, 
-    brand: 'Coffee Lab', 
+    brand: 'Kahve Dünyası', 
     title: 'Yeni üyelere ilk kahve hediye', 
     description: 'Uygulama üzerinden siparişlerde geçerlidir',
     expiryDate: '30 Haziran 2025',
@@ -327,9 +327,9 @@ export default function Home() {
                       <div className="badge badge-secondary">Açık</div>
                     </div>
                     <div className="flex items-center p-4 bg-accent rounded-lg">
-                      <div className="w-10 h-10 bg-[#654321] rounded-full flex items-center justify-center text-white font-bold mr-4">C</div>
+                      <div className="w-10 h-10 bg-[#8D2C1F] rounded-full flex items-center justify-center text-white font-bold mr-4">K</div>
                       <div className="flex-grow">
-                        <h3 className="font-medium">Coffee Lab - Maslak</h3>
+                        <h3 className="font-medium">Kahve Dünyası - Maslak</h3>
                         <p className="text-sm text-gray-500">1.2 km uzaklıkta</p>
                       </div>
                       <div className="badge badge-secondary">Açık</div>

@@ -1,16 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 const LogoTest = () => {
+  const [logoStatuses, setLogoStatuses] = useState<{[key: number]: boolean}>({});
+  
+  // Logo bilgileri ve renkleri
   const logos = [
-    { id: 1, name: 'Starbucks', path: '/starbucks.png' },
-    { id: 2, name: 'Gloria Jeans', path: '/gloriajeans.png' },
-    { id: 3, name: 'Caribou Coffee', path: '/caribou.png', altPath: '/cariboucoffee.png' },
-    { id: 4, name: 'Coffee Lab', path: '/coffeelab.png' },
-    { id: 5, name: 'Tchibo', path: '/tchibo.png' },
-    { id: 6, name: 'Espresso Lab', path: '/espressolab.png' },
+    { id: 1, name: 'Starbucks', path: '/starbucks.png', color: '#006241' },
+    { id: 2, name: 'Gloria Jeans', path: '/gloriajeans.png', color: '#8B4513' },
+    { id: 3, name: 'Caribou Coffee', path: '/caribou.png', color: '#7A5C61' },
+    { id: 4, name: 'Kahve Dünyası', path: '/kahvedunyasi.png', color: '#8D2C1F' },
+    { id: 5, name: 'Tchibo', path: '/tchibo.png', color: '#00205B' },
+    { id: 6, name: 'Espresso Lab', path: '/espressolab.png', color: '#4B2E39' },
   ];
+  
+  useEffect(() => {
+    // Başlangıçta tüm logoların durumunu kontrol et
+    const checkImages = async () => {
+      // Sadece client-side'da çalıştığından emin ol
+      if (typeof window === 'undefined') return;
+      
+      const statuses: {[key: number]: boolean} = {};
+      
+      for (const logo of logos) {
+        try {
+          // Logo yükleme testi
+          const img = new Image();
+          img.src = logo.path;
+          await new Promise((resolve, reject) => {
+            img.onload = () => resolve(true);
+            img.onerror = () => reject(false);
+          });
+          statuses[logo.id] = true;
+        } catch (e) {
+          statuses[logo.id] = false;
+        }
+      }
+      
+      setLogoStatuses(statuses);
+    };
+    
+    checkImages();
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -22,26 +54,52 @@ const LogoTest = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-10">
           {logos.map((logo) => (
             <div key={logo.id} className="card p-6 flex flex-col items-center text-center">
-              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-4 overflow-hidden border border-gray-200 shadow-sm">
+              <div className="w-24 h-24 rounded-full flex items-center justify-center mb-4 overflow-hidden border border-gray-200 shadow-sm relative">
+                {/* Logo görüntüleme - Renkli arka plan üzerinde harf */}
+                <div 
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ backgroundColor: logo.color }}
+                >
+                  <span className="font-bold text-3xl text-white">{logo.name.charAt(0)}</span>
+                </div>
+                
+                {/* Gerçek logo yükleme denemesi - görünmez */}
                 <img 
                   src={logo.path}
                   alt={`${logo.name} logosu`}
-                  className="w-20 h-20 object-contain p-2"
+                  className="hidden"
                   loading="eager"
-                  onError={(e) => {
-                    // Alternatif yol varsa onu dene
-                    if ('altPath' in logo && logo.altPath) {
-                      (e.target as HTMLImageElement).src = logo.altPath as string;
-                    } else {
-                      // Logo yüklenemezse ilk harfi göster
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      e.currentTarget.parentElement!.innerHTML = `<div class="font-bold text-3xl text-primary">${logo.name.charAt(0)}</div>`;
+                  onLoad={(e) => {
+                    // Logo başarıyla yüklenirse göster
+                    console.log(`${logo.name} logosu başarıyla yüklendi`);
+                    const parent = e.currentTarget.parentElement;
+                    if (parent && parent.firstChild) {
+                      // Renkli arka planı kaldır
+                      parent.firstChild.remove();
+                      // Logoyu görünür yap
+                      (e.target as HTMLImageElement).className = "w-20 h-20 object-contain p-2";
                     }
+                    // Durum güncelleme
+                    setLogoStatuses(prev => ({ ...prev, [logo.id]: true }));
+                  }}
+                  onError={(e) => {
+                    // Logo yüklenemedi, zaten fallback görüntüleniyor
+                    console.log(`${logo.name} logosu yüklenemedi`);
+                    setLogoStatuses(prev => ({ ...prev, [logo.id]: false }));
                   }}
                 />
               </div>
               <h3 className="font-bold text-gray-800">{logo.name}</h3>
               <p className="text-sm text-gray-500 mt-2">Dosya: {logo.path}</p>
+              <p className="text-xs mt-1">
+                {logoStatuses[logo.id] === undefined ? (
+                  "Kontrol ediliyor..."
+                ) : logoStatuses[logo.id] ? (
+                  <span className="text-green-500">✓ Yüklendi</span>
+                ) : (
+                  <span className="text-red-500">✗ Yüklenemedi</span>
+                )}
+              </p>
             </div>
           ))}
         </div>

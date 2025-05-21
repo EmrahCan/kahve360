@@ -28,7 +28,7 @@ const allCampaigns = [
   },
   { 
     id: 3, 
-    brand: 'Coffee Lab', 
+    brand: 'Kahve Dünyası', 
     brandId: 4,
     title: 'Yeni üyelere ilk kahve hediye', 
     description: 'Uygulama üzerinden siparişlerde geçerlidir. Sadece yeni üye olan kullanıcılar için geçerlidir.',
@@ -78,7 +78,7 @@ const allCampaigns = [
   },
   { 
     id: 8, 
-    brand: 'Coffee Lab', 
+    brand: 'Kahve Dünyası', 
     brandId: 4,
     title: 'Kahve çekirdeği alana fincan hediye', 
     description: '250gr ve üzeri kahve çekirdeği alımlarında özel tasarım fincan hediye.',
@@ -93,7 +93,7 @@ const brands = [
   { id: 1, name: 'Starbucks' },
   { id: 2, name: 'Gloria Jeans' },
   { id: 3, name: 'Caribou Coffee' },
-  { id: 4, name: 'Coffee Lab' },
+  { id: 4, name: 'Kahve Dünyası' },
   { id: 5, name: 'Tchibo' },
   { id: 6, name: 'Espresso Lab' },
 ];

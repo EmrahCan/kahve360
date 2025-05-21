@@ -97,7 +97,7 @@ const branches = [
   },
   { 
     id: 6, 
-    brand: 'Coffee Lab', 
+    brand: 'Kahve Dünyası', 
     brandId: 4,
     name: 'Maslak', 
     address: 'Büyükdere Cad. No:245 Maslak/İstanbul', 
@@ -147,7 +147,7 @@ const brands = [
   { id: 1, name: 'Starbucks' },
   { id: 2, name: 'Gloria Jeans' },
   { id: 3, name: 'Caribou Coffee' },
-  { id: 4, name: 'Coffee Lab' },
+  { id: 4, name: 'Kahve Dünyası' },
   { id: 5, name: 'Tchibo' },
   { id: 6, name: 'Espresso Lab' },
 ];
@@ -396,7 +396,7 @@ export default function Map() {
                 {sortedBranches.length > 0 ? (
                   <div className="space-y-4">
                     {sortedBranches.map(branch => (
-                      <div key={branch.id} className="card card-hover p-6">
+                      <div key={branch.id} id={`branch-${branch.id}`} className="card card-hover p-6 transition-all duration-300">
                         <div className="flex flex-col md:flex-row justify-between">
                           <div>
                             <div className="flex items-center mb-2">
