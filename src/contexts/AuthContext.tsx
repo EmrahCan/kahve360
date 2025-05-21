@@ -14,8 +14,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (name: string, email: string, password: string) => Promise<User>;
   logout: () => void;
   forgotPassword: (email: string) => Promise<void>;
 }
@@ -24,8 +24,8 @@ interface AuthContextType {
 const defaultContext: AuthContextType = {
   user: null,
   loading: true,
-  login: async () => {},
-  register: async () => {},
+  login: async () => { throw new Error('AuthContext henüz başlatılmadı'); },
+  register: async () => { throw new Error('AuthContext henüz başlatılmadı'); },
   logout: () => {},
   forgotPassword: async () => {},
 };
@@ -60,26 +60,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log('AuthContext: Giriş işlemi başlatılıyor');
       
       // Gerçek uygulamada, burada API çağrısı yapılır
       // Şimdilik demo için simüle ediyoruz
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Demo kullanıcı
+      // Demo kullanıcı - test için her zaman başarılı giriş yapıyoruz
       const demoUser: User = {
         id: '1',
         name: 'Demo Kullanıcı',
         email: email,
+        phone: '+90 555 123 4567',
+        profileImage: '/profile-demo.png'
       };
       
       // Kullanıcı bilgilerini kaydet
       localStorage.setItem('kahve360_user', JSON.stringify(demoUser));
       setUser(demoUser);
+      console.log('AuthContext: Kullanıcı girişi başarılı', demoUser);
       
-      // Ana sayfaya yönlendir
-      router.push('/');
+      // Başarılı giriş mesajı
+      return demoUser;
     } catch (error) {
-      console.error('Giriş hatası:', error);
+      console.error('AuthContext: Giriş hatası:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -90,6 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (name: string, email: string, password: string) => {
     try {
       setLoading(true);
+      console.log('AuthContext: Kayıt işlemi başlatılıyor');
       
       // Gerçek uygulamada, burada API çağrısı yapılır
       // Şimdilik demo için simüle ediyoruz
@@ -100,16 +105,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: '1',
         name: name,
         email: email,
+        phone: '+90 555 123 4567',
+        profileImage: '/profile-demo.png'
       };
       
       // Kullanıcı bilgilerini kaydet
       localStorage.setItem('kahve360_user', JSON.stringify(demoUser));
       setUser(demoUser);
+      console.log('AuthContext: Kullanıcı kaydı başarılı', demoUser);
       
-      // Ana sayfaya yönlendir
-      router.push('/');
+      // Başarılı kayıt mesajı
+      return demoUser;
     } catch (error) {
-      console.error('Kayıt hatası:', error);
+      console.error('AuthContext: Kayıt hatası:', error);
       throw error;
     } finally {
       setLoading(false);

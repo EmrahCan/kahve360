@@ -39,9 +39,13 @@ export default function Register() {
     try {
       setError('');
       setIsLoading(true);
-      await register(name, email, password);
-      // Başarılı kayıt sonrası yönlendirme AuthContext içinde yapılıyor
+      console.log('Kayıt işlemi başlatılıyor:', name, email);
+      const user = await register(name, email, password);
+      console.log('Kayıt başarılı:', user);
+      // Başarılı kayıt sonrası ana sayfaya yönlendir
+      router.push('/');
     } catch (err) {
+      console.error('Kayıt hatası:', err);
       setError('Kayıt oluşturulamadı. Lütfen daha sonra tekrar deneyin.');
     } finally {
       setIsLoading(false);

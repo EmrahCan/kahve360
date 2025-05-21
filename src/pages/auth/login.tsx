@@ -26,9 +26,12 @@ export default function Login() {
     try {
       setError('');
       setIsLoading(true);
+      console.log('Giriş yapılıyor:', email, password);
       await login(email, password);
       // Başarılı giriş sonrası yönlendirme AuthContext içinde yapılıyor
+      router.push('/');
     } catch (err) {
+      console.error('Giriş hatası:', err);
       setError('Giriş yapılamadı. Lütfen e-posta ve şifrenizi kontrol edin.');
     } finally {
       setIsLoading(false);
