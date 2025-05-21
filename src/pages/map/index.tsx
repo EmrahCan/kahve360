@@ -155,33 +155,80 @@ const brands = [
 // Özellik filtreleme için özellikler
 const amenities = ['Wi-Fi', 'Priz', 'Teras', 'Otopark'];
 
+// Mesafe hesaplama fonksiyonu (Haversine formülü)
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Dünya yarıçapı (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
 export default function Map() {
   const [selectedBrand, setSelectedBrand] = useState<number | null>(null);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [branchesWithDistance, setBranchesWithDistance] = useState(branches);
   const [sortBy, setSortBy] = useState<'distance' | 'rating'>('distance');
   
+  // Kullanıcı konumunu alma
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+          
+          // Kullanıcı konumuna göre şubelerin mesafesini hesapla
+          const updatedBranches = branches.map(branch => {
+            const distance = calculateDistance(
+              latitude, 
+              longitude, 
+              branch.lat, 
+              branch.lng
+            );
+            
+            return {
+              ...branch,
+              distance: distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`,
+              distanceValue: distance // Sıralama için sayısal değer
+            };
+          });
+          
+          setBranchesWithDistance(updatedBranches);
+        },
+        (error) => {
+          console.error('Konum alınamadı:', error.message);
+          // Konum alınamazsa varsayılan mesafeleri kullan
+          setBranchesWithDistance(branches);
+        }
+      );
+    }
+  }, []);
+
   // Filtreleme işlemi
-  const filteredBranches = branches.filter(branch => {
-    // Marka filtresi
+  const filteredBranches = branchesWithDistance.filter(branch => {
+    // Marka filtreleme
     if (selectedBrand !== null && branch.brandId !== selectedBrand) {
       return false;
     }
     
-    // Özellik filtresi
-    if (selectedAmenities.length > 0) {
-      const hasAllAmenities = selectedAmenities.every(amenity => 
-        branch.amenities.includes(amenity)
-      );
-      if (!hasAllAmenities) {
-        return false;
-      }
+    // Özellik filtreleme
+    if (selectedAmenities.length > 0 && !selectedAmenities.every(amenity => branch.amenities.includes(amenity))) {
+      return false;
     }
     
-    // Arama filtresi
-    if (searchQuery && !branch.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
-        !branch.brand.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !branch.address.toLowerCase().includes(searchQuery.toLowerCase())) {
+    // Arama filtreleme
+    if (searchQuery && !(
+      branch.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      branch.address.toLowerCase().includes(searchQuery.toLowerCase())
+    )) {
       return false;
     }
     
@@ -191,8 +238,12 @@ export default function Map() {
   // Sıralama işlemi
   const sortedBranches = [...filteredBranches].sort((a, b) => {
     if (sortBy === 'distance') {
-      return parseFloat(a.distance) - parseFloat(b.distance);
+      // Mesafeye göre sıralama (distanceValue varsa onu kullan, yoksa string'den parse et)
+      const aDistance = 'distanceValue' in a ? (a as any).distanceValue : parseFloat(a.distance);
+      const bDistance = 'distanceValue' in b ? (b as any).distanceValue : parseFloat(b.distance);
+      return aDistance - bDistance;
     } else {
+      // Puana göre sıralama (azalan)
       return b.rating - a.rating;
     }
   });
@@ -254,6 +305,66 @@ export default function Map() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Filtreler */}
               <div className="lg:col-span-1">
+                {/* Konum Bilgisi */}
+                <div className="bg-white p-4 rounded-xl shadow-sm mb-6">
+                  <h2 className="text-lg font-bold text-gray-800 mb-4">Konum Bilgisi</h2>
+                  {userLocation ? (
+                    <>
+                      <div className="flex items-center mb-3">
+                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center mr-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 font-medium">Konumunuz Alındı</p>
+                          <p className="text-xs text-gray-500">Enlem: {userLocation.lat.toFixed(4)}, Boylam: {userLocation.lng.toFixed(4)}</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-600 mb-2">
+                        <span className="font-medium">Yakınınızda:</span> {filteredBranches.length} kahve dükkanı bulundu
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        En yakını {sortedBranches.length > 0 ? `${sortedBranches[0].brand} - ${sortedBranches[0].name} (${sortedBranches[0].distance})` : ''}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center mb-3">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 font-medium">Konum Bilgisi Bekleniyor</p>
+                          <p className="text-xs text-gray-500">Daha doğru sonuçlar için konum izni verin</p>
+                        </div>
+                      </div>
+                      <button 
+                        className="btn btn-sm btn-outline w-full mt-2"
+                        onClick={() => {
+                          if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                              (position) => {
+                                const { latitude, longitude } = position.coords;
+                                setUserLocation({ lat: latitude, lng: longitude });
+                              },
+                              (error) => {
+                                console.error('Konum alınamadı:', error.message);
+                                alert('Konum bilgisi alınamadı. Lütfen tarayıcı izinlerini kontrol edin.');
+                              }
+                            );
+                          }
+                        }}
+                      >
+                        Konumu Al
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Filtreler */}
                 <div className="bg-white p-6 rounded-xl shadow-sm mb-6">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold text-gray-800">Filtreler</h2>
@@ -348,24 +459,6 @@ export default function Map() {
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="bg-white p-6 rounded-xl shadow-sm">
-                  <h2 className="text-lg font-semibold text-gray-800 mb-4">Konumunuz</h2>
-                  <div className="bg-gray-100 h-40 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-500">Harita görünümü</p>
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-600 mb-2">Mevcut konum:</p>
-                    <p className="font-medium">Levent, İstanbul</p>
-                  </div>
-                  <button className="btn btn-outline w-full mt-4 py-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Konumu Güncelle
-                  </button>
                 </div>
               </div>
               

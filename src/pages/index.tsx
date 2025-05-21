@@ -4,6 +4,20 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import dynamic from 'next/dynamic';
+
+// Harita bileşenini istemci tarafında dinamik olarak yükleme
+const DynamicMapView = dynamic(() => import('@/components/MapView'), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-gray-200 h-full w-full rounded-xl flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-gray-500 mb-2">Harita yükleniyor...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    </div>
+  )
+});
 
 // Kahve markaları verileri
 const brands = [
@@ -341,9 +355,14 @@ export default function Home() {
                 </div>
                 <div className="md:w-1/2">
                   <div className="rounded-xl overflow-hidden shadow-lg h-96 bg-gray-200 relative">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-2xl font-bold text-gray-400">Harita Görünümü</div>
-                    </div>
+                    <DynamicMapView 
+                      locations={[
+                        { id: 1, brand: 'Starbucks', name: 'Levent', address: 'Büyükdere Cad. No:185 Levent/İstanbul', lat: 41.0811, lng: 29.0111, isOpen: true },
+                        { id: 2, brand: 'Gloria Jeans', name: 'Kanyon AVM', address: 'Kanyon AVM 1. Kat No:45 Levent/İstanbul', lat: 41.0795, lng: 29.0120, isOpen: true },
+                        { id: 3, brand: 'Kahve Dünyası', name: 'Maslak', address: 'Büyükdere Cad. No:245 Maslak/İstanbul', lat: 41.1115, lng: 29.0225, isOpen: true }
+                      ]} 
+                      zoom={12}
+                    />
                   </div>
                 </div>
               </div>
