@@ -10,10 +10,10 @@ const Footer = () => {
             <Link href="/" className="flex items-center space-x-2 mb-4">
               <div className="relative w-10 h-10">
                 <div className="absolute inset-0 bg-white rounded-full flex items-center justify-center text-primary font-bold text-xl">
-                  K
+                  C
                 </div>
               </div>
-              <span className="text-xl font-heading font-bold text-white">Kahve<span className="text-secondary">360</span></span>
+              <span className="text-xl font-heading font-bold text-white">Cafe<span className="text-secondary">Connect</span></span>
             </Link>
             <p className="text-gray-300 text-sm mb-4">
               Tüm kahve markalarını tek uygulamada buluşturan dijital platform. Kampanyaları takip edin, sadakat puanlarınızı biriktirin.
