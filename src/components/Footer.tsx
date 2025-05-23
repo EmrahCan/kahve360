@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 const Footer = () => {
   return (
@@ -9,9 +10,13 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-1">
             <Link href="/" className="flex items-center space-x-2 mb-4">
               <div className="relative w-10 h-10">
-                <div className="absolute inset-0 bg-white rounded-full flex items-center justify-center text-primary font-bold text-xl">
-                  C
-                </div>
+                <Image 
+                  src="/logo.png" 
+                  alt="CafeConnect Logo" 
+                  width={40} 
+                  height={40} 
+                  className="rounded-full bg-white p-1"
+                />
               </div>
               <span className="text-xl font-heading font-bold text-white">Cafe<span className="text-secondary">Connect</span></span>
             </Link>

@@ -15,9 +15,13 @@ const Header = () => {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <div className="relative w-10 h-10">
-              <div className="absolute inset-0 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl">
-                C
-              </div>
+              <Image 
+                src="/logo.png" 
+                alt="CafeConnect Logo" 
+                width={40} 
+                height={40} 
+                className="rounded-full"
+              />
             </div>
             <span className="text-xl font-heading font-bold text-primary">Cafe<span className="text-secondary">Connect</span></span>
           </Link>
