@@ -86,8 +86,6 @@ export default function UserManagement() {
     return matchesSearch && matchesStatus && matchesRole;
   });
   
-
-  
   // Kullanıcı silme fonksiyonu
   const handleDeleteUser = async (userId: string) => {
     if (window.confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) {
@@ -128,7 +126,7 @@ export default function UserManagement() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: newStatus
+          status: newStatus,
         }),
       });
       
@@ -139,20 +137,17 @@ export default function UserManagement() {
       // Kullanıcı listesini güncelle
       setUsers(users.map(user => {
         if (user.id === userId) {
-          return {
-            ...user,
-            status: newStatus
-          };
+          return { ...user, status: newStatus };
         }
         return user;
       }));
+      
+      alert(`Kullanıcı durumu ${newStatus === 'active' ? 'aktif' : 'pasif'} olarak güncellendi`);
     } catch (err) {
       alert('Kullanıcı durumu güncellenirken bir hata oluştu: ' + (err as Error).message);
       console.error('Kullanıcı durumu güncelleme hatası:', err);
     }
   };
-  
-
   
   if (!isAdminState) {
     return (
@@ -310,10 +305,11 @@ export default function UserManagement() {
                         </tr>
                       ))}
                     </tbody>
-                </table>
-              </div>
+                  </table>
+                </div>
+              )}
               
-              {filteredUsers.length === 0 && (
+              {!isLoading && !error && filteredUsers.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-gray-500">Arama kriterlerinize uygun kullanıcı bulunamadı.</p>
                 </div>
