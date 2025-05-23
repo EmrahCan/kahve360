@@ -175,40 +175,107 @@ export default function Map() {
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [branchesWithDistance, setBranchesWithDistance] = useState(branches);
   const [sortBy, setSortBy] = useState<'distance' | 'rating'>('distance');
+  const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [locationError, setLocationError] = useState<string | null>(null);
+  
+  // Manuel konum girişi için
+  const [manualLocation, setManualLocation] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualLocationStatus, setManualLocationStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  
+  // Örnek konumlar - İstanbul'un popüler semtleri
+  const popularLocations = [
+    { name: 'Levent', lat: 41.0811, lng: 29.0111 },
+    { name: 'Nişantaşı', lat: 41.0489, lng: 28.9872 },
+    { name: 'Kadıköy', lat: 40.9926, lng: 29.0299 },
+    { name: 'Beşiktaş', lat: 41.0435, lng: 29.0059 },
+    { name: 'Bakırköy', lat: 40.9819, lng: 28.8772 },
+    { name: 'Taksim', lat: 41.0370, lng: 28.9850 }
+  ];
   
   // Kullanıcı konumunu alma
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-          
-          // Kullanıcı konumuna göre şubelerin mesafesini hesapla
-          const updatedBranches = branches.map(branch => {
-            const distance = calculateDistance(
-              latitude, 
-              longitude, 
-              branch.lat, 
-              branch.lng
-            );
-            
-            return {
-              ...branch,
-              distance: distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`,
-              distanceValue: distance // Sıralama için sayısal değer
-            };
-          });
-          
-          setBranchesWithDistance(updatedBranches);
-        },
-        (error) => {
-          console.error('Konum alınamadı:', error.message);
-          // Konum alınamazsa varsayılan mesafeleri kullan
-          setBranchesWithDistance(branches);
+    const getUserLocation = async () => {
+      // Önce konum yükleniyor durumuna geç
+      setLocationStatus('loading');
+      setLocationError(null);
+      
+      if (!navigator.geolocation) {
+        setLocationStatus('error');
+        setLocationError('Tarayıcınız konum özelliğini desteklemiyor.');
+        return;
+      }
+      
+      try {
+        // Önce konum izni var mı kontrol et
+        const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+        
+        if (permissionStatus.state === 'denied') {
+          setLocationStatus('error');
+          setLocationError('Konum izni reddedildi. Lütfen tarayıcı ayarlarınızdan konum iznini etkinleştirin.');
+          return;
         }
-      );
-    }
+        
+        // Konum bilgisini al
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log('Konum alındı:', latitude, longitude);
+            setUserLocation({ lat: latitude, lng: longitude });
+            setLocationStatus('success');
+            
+            // Kullanıcı konumuna göre şubelerin mesafesini hesapla
+            const updatedBranches = branches.map(branch => {
+              const distance = calculateDistance(
+                latitude, 
+                longitude, 
+                branch.lat, 
+                branch.lng
+              );
+              
+              return {
+                ...branch,
+                distance: distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`,
+                distanceValue: distance // Sıralama için sayısal değer
+              };
+            });
+            
+            setBranchesWithDistance(updatedBranches);
+          },
+          (error) => {
+            console.error('Konum alınamadı:', error.message);
+            setLocationStatus('error');
+            
+            // Hata koduna göre daha anlaşılır mesajlar
+            switch (error.code) {
+              case error.PERMISSION_DENIED:
+                setLocationError('Konum izni reddedildi. Lütfen tarayıcı ayarlarınızdan konum iznini etkinleştirin.');
+                break;
+              case error.POSITION_UNAVAILABLE:
+                setLocationError('Konum bilgisi alınamıyor. Lütfen daha sonra tekrar deneyin.');
+                break;
+              case error.TIMEOUT:
+                setLocationError('Konum alımı zaman aşımına uğradı. Lütfen daha sonra tekrar deneyin.');
+                break;
+              default:
+                setLocationError(`Konum alınamadı: ${error.message}`);
+            }
+            
+            // Konum alınamazsa varsayılan mesafeleri kullan
+            setBranchesWithDistance(branches);
+          },
+          // Daha kısa timeout ve yüksek doğruluk ayarları
+          { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
+        );
+      } catch (err) {
+        console.error('Konum alma hatası:', err);
+        setLocationStatus('error');
+        setLocationError('Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+        setBranchesWithDistance(branches);
+      }
+    };
+    
+    getUserLocation();
   }, []);
 
   // Filtreleme işlemi
@@ -464,25 +531,216 @@ export default function Map() {
               
               {/* Harita ve Şube Listesi */}
               <div className="lg:col-span-2">
-                {/* Harita */}
-                <div className="bg-white p-4 rounded-xl shadow-sm mb-6">
-                  <div className="h-96 rounded-lg overflow-hidden">
-                    <DynamicMapView 
-                      locations={sortedBranches.map(branch => ({
-                        id: branch.id,
-                        brand: branch.brand,
-                        name: branch.name,
-                        address: branch.address,
-                        lat: branch.lat,
-                        lng: branch.lng,
-                        isOpen: branch.isOpen
-                      }))}
-                      onMarkerClick={(location) => {
-                        // Seçilen şubeyi vurgulama işlemi burada yapılabilir
-                        console.log('Seçilen şube:', location);
-                      }}
-                    />
+                {/* Konum Durumu */}
+                {locationStatus === 'loading' && (
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-lg">
+                    <div className="flex items-center">
+                      <div className="inline-block animate-spin mr-3 h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                      <p className="text-blue-700">Konumunuz alınıyor... Bu işlem bir kaç saniye sürebilir.</p>
+                    </div>
                   </div>
+                )}
+                
+                {locationStatus === 'error' && locationError && (
+                  <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3 flex-1">
+                        <p className="text-sm text-red-700">
+                          {locationError}
+                        </p>
+                        <div className="mt-2 flex space-x-3">
+                          <button 
+                            className="inline-flex items-center text-xs font-medium text-red-700 hover:text-red-900"
+                            onClick={() => {
+                              setLocationStatus('idle');
+                              // Konum alma işlemini tekrar başlat
+                              if (navigator.geolocation) {
+                                setLocationStatus('loading');
+                                navigator.geolocation.getCurrentPosition(
+                                  (position) => {
+                                    const { latitude, longitude } = position.coords;
+                                    setUserLocation({ lat: latitude, lng: longitude });
+                                    setLocationStatus('success');
+                                    
+                                    const updatedBranches = branches.map(branch => {
+                                      const distance = calculateDistance(
+                                        latitude, longitude, branch.lat, branch.lng
+                                      );
+                                      return {
+                                        ...branch,
+                                        distance: distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`,
+                                        distanceValue: distance
+                                      };
+                                    });
+                                    
+                                    setBranchesWithDistance(updatedBranches);
+                                  },
+                                  (error) => {
+                                    console.error('Konum alınamadı (tekrar):', error);
+                                    setLocationStatus('error');
+                                    setLocationError(`Konum alınamadı: ${error.message}`);
+                                  },
+                                  { timeout: 10000, enableHighAccuracy: true }
+                                );
+                              }
+                            }}
+                          >
+                            <svg className="mr-1.5 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                            </svg>
+                            Tekrar Dene
+                          </button>
+                          <button 
+                            className="inline-flex items-center text-xs font-medium text-primary hover:text-primary-dark"
+                            onClick={() => setShowManualInput(!showManualInput)}
+                          >
+                            <svg className="mr-1.5 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                            </svg>
+                            {showManualInput ? 'Gizle' : 'Manuel Konum Gir'}
+                          </button>
+                        </div>
+                        
+                        {showManualInput && (
+                          <div className="mt-4 bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Konum Seç</h4>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
+                              {popularLocations.map((location) => (
+                                <button
+                                  key={location.name}
+                                  className="bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md text-sm text-gray-700"
+                                  onClick={() => {
+                                    setUserLocation({ lat: location.lat, lng: location.lng });
+                                    setLocationStatus('success');
+                                    
+                                    // Kullanıcı konumuna göre şubelerin mesafesini hesapla
+                                    const updatedBranches = branches.map(branch => {
+                                      const distance = calculateDistance(
+                                        location.lat, 
+                                        location.lng, 
+                                        branch.lat, 
+                                        branch.lng
+                                      );
+                                      
+                                      return {
+                                        ...branch,
+                                        distance: distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`,
+                                        distanceValue: distance // Sıralama için sayısal değer
+                                      };
+                                    });
+                                    
+                                    setBranchesWithDistance(updatedBranches);
+                                  }}
+                                >
+                                  {location.name}
+                                </button>
+                              ))}
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <input 
+                                type="text" 
+                                placeholder="Örn: Levent, Kadıköy, vb."
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                                value={manualLocation}
+                                onChange={(e) => setManualLocation(e.target.value)}
+                              />
+                              <button 
+                                className="px-3 py-2 bg-primary text-white rounded-md text-sm hover:bg-primary-dark"
+                                onClick={async () => {
+                                  if (!manualLocation.trim()) return;
+                                  
+                                  setManualLocationStatus('loading');
+                                  
+                                  try {
+                                    // Geocoding API kullanarak konum adresini koordinatlara çevir
+                                    // Not: Bu örnekte basitlik için sadece örnek konumlar kullanıyoruz
+                                    const foundLocation = popularLocations.find(loc => 
+                                      loc.name.toLowerCase().includes(manualLocation.toLowerCase())
+                                    );
+                                    
+                                    if (foundLocation) {
+                                      setUserLocation({ lat: foundLocation.lat, lng: foundLocation.lng });
+                                      setLocationStatus('success');
+                                      setManualLocationStatus('success');
+                                      
+                                      // Kullanıcı konumuna göre şubelerin mesafesini hesapla
+                                      const updatedBranches = branches.map(branch => {
+                                        const distance = calculateDistance(
+                                          foundLocation.lat, 
+                                          foundLocation.lng, 
+                                          branch.lat, 
+                                          branch.lng
+                                        );
+                                        
+                                        return {
+                                          ...branch,
+                                          distance: distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`,
+                                          distanceValue: distance
+                                        };
+                                      });
+                                      
+                                      setBranchesWithDistance(updatedBranches);
+                                    } else {
+                                      setManualLocationStatus('error');
+                                      alert('Girdiğiniz konum bulunamadı. Lütfen önerilen konumlardan birini seçin.');
+                                    }
+                                  } catch (error) {
+                                    console.error('Manuel konum hatası:', error);
+                                    setManualLocationStatus('error');
+                                  }
+                                }}
+                              >
+                                Ara
+                              </button>
+                            </div>
+                            <p className="mt-2 text-xs text-gray-500">Not: Şu anda sadece önceden tanımlanmış konumlar desteklenmektedir.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {locationStatus === 'success' && userLocation && (
+                  <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm text-green-700">
+                          Konumunuz başarıyla alındı. Size en yakın şubeler listeleniyor.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Harita */}
+                <div className="mb-6 bg-gray-100 rounded-lg overflow-hidden" style={{ height: '400px' }}>
+                  <DynamicMapView 
+                    locations={sortedBranches}
+                    center={userLocation ? [userLocation.lng, userLocation.lat] : undefined}
+                    onMarkerClick={(location) => {
+                      const element = document.getElementById(`branch-${location.id}`);
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                        element.classList.add('highlight');
+                        setTimeout(() => {
+                          element.classList.remove('highlight');
+                        }, 2000);
+                      }
+                    }}
+                  />
                 </div>
                 
                 {/* Şube Listesi */}
