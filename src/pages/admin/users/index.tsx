@@ -252,7 +252,7 @@ export default function UserManagement() {
                   </button>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto border rounded-lg">
                   <table className="w-full table-auto">
                     <thead className="bg-gray-50">
                       <tr>
@@ -268,48 +268,48 @@ export default function UserManagement() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {filteredUsers.map(user => (
-                      <tr key={user.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm text-gray-500">{user.id}</td>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{user.name}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{user.email}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{user.phone}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {user.role === 'admin' ? 'Admin' : 'Kullanıcı'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {user.status === 'active' ? 'Aktif' : 'Pasif'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{user.createdAt}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          <div className="flex gap-2">
-                            <Link href={`/admin/users/${user.id}`} className="text-blue-600 hover:text-blue-800">
-                              Düzenle
-                            </Link>
-                            <button 
-                              className="text-gray-600 hover:text-gray-800"
-                              onClick={() => handleToggleStatus(user.id)}
-                            >
-                              {user.status === 'active' ? 'Pasifleştir' : 'Aktifleştir'}
-                            </button>
-                            <button 
-                              className="text-red-600 hover:text-red-800"
-                              onClick={() => handleDeleteUser(user.id)}
-                            >
-                              Sil
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                        <tr key={user.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm text-gray-500">{user.id}</td>
+                          <td className="px-4 py-3 text-sm font-medium text-gray-900">{user.name}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{user.email}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{user.phone}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {user.role === 'admin' ? 'Admin' : 'Kullanıcı'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {user.status === 'active' ? 'Aktif' : 'Pasif'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{user.createdAt}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            <div className="flex gap-2">
+                              <Link href={`/admin/users/${user.id}`} className="text-blue-600 hover:text-blue-800">
+                                Düzenle
+                              </Link>
+                              <button 
+                                className="text-gray-600 hover:text-gray-800"
+                                onClick={() => handleToggleStatus(user.id)}
+                              >
+                                {user.status === 'active' ? 'Pasifleştir' : 'Aktifleştir'}
+                              </button>
+                              <button 
+                                className="text-red-600 hover:text-red-800"
+                                onClick={() => handleDeleteUser(user.id)}
+                              >
+                                Sil
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
                 </table>
               </div>
               
