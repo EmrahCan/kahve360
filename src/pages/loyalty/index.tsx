@@ -288,7 +288,7 @@ export default function Loyalty() {
               </div>
               <h3 className="text-xl font-bold text-primary mb-2">Yeni Kart Ekle</h3>
               <p className="text-gray-600 max-w-md">
-                Henüz Kahve360'a eklenmemiş bir kahve markasının sadakat kartını ekleyin.
+                Henüz CafeConnect'a eklenmemiş bir kahve markasının sadakat kartını ekleyin.
               </p>
             </div>
           </div>

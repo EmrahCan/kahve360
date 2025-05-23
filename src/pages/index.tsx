@@ -81,7 +81,7 @@ export default function Home() {
                     <span className="text-secondary">Tek Uygulamada</span>
                   </h1>
                   <p className="text-lg mb-8 text-gray-100">
-                    Kahve360 ile favori kahve markalarınızın kampanyalarını takip edin, 
+                    CafeConnect ile favori kahve markalarınızın kampanyalarını takip edin, 
                     sadakat puanlarınızı biriktirin ve size en yakın şubeleri bulun.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4">
@@ -320,7 +320,7 @@ export default function Home() {
                 <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10">
                   <h2 className="text-3xl font-bold text-primary mb-4">Size En Yakın Kahveciler</h2>
                   <p className="text-gray-600 mb-6">
-                    Kahve360 ile konumunuza en yakın kahve dükkanlarını anında bulun. Çalışma saatlerini, 
+                    CafeConnect ile konumunuza en yakın kahve dükkanlarını anında bulun. Çalışma saatlerini, 
                     yoğunluk durumunu ve kullanıcı yorumlarını görüntüleyin.
                   </p>
                   <div className="space-y-4">
@@ -374,7 +374,7 @@ export default function Home() {
             <div className="container text-center">
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Kahve Deneyiminizi Dönüştürün</h2>
               <p className="text-xl text-gray-100 mb-8 max-w-3xl mx-auto">
-                Kahve360 ile tüm kahve markalarını tek uygulamada yönetin, kampanyaları kaçırmayın ve sadakat puanlarınızı biriktirin.
+                CafeConnect ile tüm kahve markalarını tek uygulamada yönetin, kampanyaları kaçırmayın ve sadakat puanlarınızı biriktirin.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/register" className="btn bg-white text-primary hover:bg-gray-100 font-bold">

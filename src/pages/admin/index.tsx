@@ -6,23 +6,28 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 export default function AdminDashboard() {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const { user } = useAuth();
+  const [isAdminState, setIsAdminState] = useState(false);
+  const { user, isAdmin } = useAuth();
   const router = useRouter();
   
   useEffect(() => {
-    // Gerçek uygulamada, kullanıcının admin olup olmadığını kontrol et
-    // Şimdilik demo için basit bir kontrol yapıyoruz
-    if (user) {
-      // Demo için her giriş yapmış kullanıcıyı admin kabul ediyoruz
-      setIsAdmin(true);
-    } else {
+    // Kullanıcının admin olup olmadığını kontrol et
+    if (!user) {
       // Kullanıcı giriş yapmamışsa giriş sayfasına yönlendir
       router.push('/auth/login?returnUrl=/admin');
+      return;
     }
-  }, [user, router]);
+    
+    if (isAdmin) {
+      setIsAdminState(true);
+    } else {
+      // Admin olmayan kullanıcıları ana sayfaya yönlendir
+      alert('Bu sayfaya erişim yetkiniz bulunmamaktadır. Sadece admin kullanıcıları erişebilir.');
+      router.push('/');
+    }
+  }, [user, isAdmin, router]);
   
-  if (!isAdmin) {
+  if (!isAdminState) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -42,8 +47,8 @@ export default function AdminDashboard() {
   return (
     <>
       <Head>
-        <title>Admin Panel - Kahve360</title>
-        <meta name="description" content="Kahve360 Admin Paneli" />
+        <title>Admin Panel - CafeConnect</title>
+        <meta name="description" content="CafeConnect Admin Paneli" />
       </Head>
       
       <div className="flex flex-col min-h-screen">

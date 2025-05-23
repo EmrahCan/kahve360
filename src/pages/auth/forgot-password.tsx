@@ -36,8 +36,8 @@ export default function ForgotPassword() {
   return (
     <>
       <Head>
-        <title>Şifremi Unuttum - Kahve360</title>
-        <meta name="description" content="Kahve360 hesabınızın şifresini sıfırlayın" />
+        <title>Şifremi Unuttum - CafeConnect</title>
+        <meta name="description" content="CafeConnect hesabınızın şifresini sıfırlayın" />
       </Head>
       
       <div className="flex flex-col min-h-screen">

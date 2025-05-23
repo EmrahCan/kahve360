@@ -6,17 +6,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-// Demo kullanıcı listesi
-const demoUsers = [
-  { id: '1', name: 'Demo Kullanıcı', email: 'demo@example.com', phone: '+90 555 123 4567', role: 'admin', status: 'active', createdAt: '2025-04-15' },
-  { id: '2', name: 'Ali Yılmaz', email: 'ali@example.com', phone: '+90 555 234 5678', role: 'user', status: 'active', createdAt: '2025-04-20' },
-  { id: '3', name: 'Ayşe Demir', email: 'ayse@example.com', phone: '+90 555 345 6789', role: 'user', status: 'active', createdAt: '2025-04-25' },
-  { id: '4', name: 'Mehmet Kaya', email: 'mehmet@example.com', phone: '+90 555 456 7890', role: 'user', status: 'inactive', createdAt: '2025-05-01' },
-  { id: '5', name: 'Zeynep Şahin', email: 'zeynep@example.com', phone: '+90 555 567 8901', role: 'user', status: 'active', createdAt: '2025-05-05' },
-];
+// Kullanıcı tipi tanımı
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'admin' | 'user';
+  status: 'active' | 'inactive';
+  createdAt: string;
+}
 
 export default function EditUser() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminState, setIsAdminState] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -27,40 +29,62 @@ export default function EditUser() {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const router = useRouter();
   const { id } = router.query;
   
   useEffect(() => {
-    // Gerçek uygulamada, kullanıcının admin olup olmadığını kontrol et
-    if (user) {
-      // Demo için her giriş yapmış kullanıcıyı admin kabul ediyoruz
-      setIsAdmin(true);
-    } else {
+    // Kullanıcının admin olup olmadığını kontrol et
+    if (!user) {
       // Kullanıcı giriş yapmamışsa giriş sayfasına yönlendir
       router.push('/auth/login?returnUrl=' + router.asPath);
+      return;
     }
-  }, [user, router]);
+    
+    if (isAdmin) {
+      setIsAdminState(true);
+    } else {
+      // Admin olmayan kullanıcıları ana sayfaya yönlendir
+      alert('Bu sayfaya erişim yetkiniz bulunmamaktadır. Sadece admin kullanıcıları erişebilir.');
+      router.push('/');
+    }
+  }, [user, isAdmin, router]);
+  
+  // Kullanıcı verilerini API'den getir
+  const fetchUserData = async (userId: string) => {
+    try {
+      setIsLoading(true);
+      setError('');
+      
+      const response = await fetch(`/api/users/${userId}`);
+      
+      if (!response.ok) {
+        throw new Error('Kullanıcı bilgileri getirilirken bir hata oluştu');
+      }
+      
+      const data = await response.json();
+      const userData = data.data;
+      
+      setUserData(userData);
+      setName(userData.name);
+      setEmail(userData.email);
+      setPhone(userData.phone || '');
+      setRole(userData.role);
+      setStatus(userData.status);
+    } catch (err) {
+      console.error('Kullanıcı bilgileri getirme hatası:', err);
+      setError('Kullanıcı bilgileri yüklenirken bir hata oluştu: ' + (err as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   useEffect(() => {
     // ID varsa kullanıcı verilerini yükle
-    if (id && isAdmin) {
-      // Gerçek uygulamada, burada API çağrısı yapılır
-      // Şimdilik demo için simüle ediyoruz
-      const foundUser = demoUsers.find(user => user.id === id);
-      
-      if (foundUser) {
-        setUserData(foundUser);
-        setName(foundUser.name);
-        setEmail(foundUser.email);
-        setPhone(foundUser.phone);
-        setRole(foundUser.role);
-        setStatus(foundUser.status);
-      } else {
-        setError('Kullanıcı bulunamadı');
-      }
+    if (id && isAdminState && typeof id === 'string') {
+      fetchUserData(id);
     }
-  }, [id, isAdmin]);
+  }, [id, isAdminState]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,18 +99,31 @@ export default function EditUser() {
       setError('');
       setIsLoading(true);
       
-      // Gerçek uygulamada, burada API çağrısı yapılır
-      // Şimdilik demo için simüle ediyoruz
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log('Kullanıcı güncellendi:', {
-        id,
+      // Kullanıcı güncelleme verilerini hazırla
+      const updateData = {
         name,
         email,
         phone,
         role,
         status
+      };
+      
+      // API'ye güncelleme isteği gönder
+      const response = await fetch(`/api/users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Kullanıcı güncellenirken bir hata oluştu');
+      }
+      
+      const data = await response.json();
+      console.log('Kullanıcı güncellendi:', data.data);
       
       // Başarılı mesajı göster
       setSuccess(true);
@@ -98,13 +135,13 @@ export default function EditUser() {
       
     } catch (err) {
       console.error('Kullanıcı güncelleme hatası:', err);
-      setError('Kullanıcı güncellenemedi. Lütfen daha sonra tekrar deneyin.');
+      setError('Kullanıcı güncellenemedi: ' + (err as Error).message);
     } finally {
       setIsLoading(false);
     }
   };
   
-  if (!isAdmin) {
+  if (!isAdminState) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -141,8 +178,8 @@ export default function EditUser() {
   return (
     <>
       <Head>
-        <title>Kullanıcı Düzenle - Kahve360 Admin</title>
-        <meta name="description" content="Kahve360 Kullanıcı Düzenleme" />
+        <title>Kullanıcı Düzenle - CafeConnect Admin</title>
+        <meta name="description" content="CafeConnect Kullanıcı Düzenleme" />
       </Head>
       
       <div className="flex flex-col min-h-screen">

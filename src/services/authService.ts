@@ -29,9 +29,9 @@ const authService = {
       const { user, token, refreshToken } = response.data;
       
       // Token ve kullanıcı bilgilerini kaydet
-      localStorage.setItem('kahve360_token', token);
-      localStorage.setItem('kahve360_refresh_token', refreshToken);
-      localStorage.setItem('kahve360_user', JSON.stringify(user));
+      localStorage.setItem('cafeconnect_token', token);
+      localStorage.setItem('cafeconnect_refresh_token', refreshToken);
+      localStorage.setItem('cafeconnect_user', JSON.stringify(user));
       
       return user;
     } catch (error) {
@@ -52,9 +52,9 @@ const authService = {
       const { user, token, refreshToken } = response.data;
       
       // Token ve kullanıcı bilgilerini kaydet
-      localStorage.setItem('kahve360_token', token);
-      localStorage.setItem('kahve360_refresh_token', refreshToken);
-      localStorage.setItem('kahve360_user', JSON.stringify(user));
+      localStorage.setItem('cafeconnect_token', token);
+      localStorage.setItem('cafeconnect_refresh_token', refreshToken);
+      localStorage.setItem('cafeconnect_user', JSON.stringify(user));
       
       return user;
     } catch (error) {
@@ -65,9 +65,9 @@ const authService = {
   
   // Çıkış
   logout: () => {
-    localStorage.removeItem('kahve360_token');
-    localStorage.removeItem('kahve360_refresh_token');
-    localStorage.removeItem('kahve360_user');
+    localStorage.removeItem('cafeconnect_token');
+    localStorage.removeItem('cafeconnect_refresh_token');
+    localStorage.removeItem('cafeconnect_user');
   },
   
   // Şifre sıfırlama
@@ -97,7 +97,7 @@ const authService = {
   getCurrentUser: (): User | null => {
     if (typeof window === 'undefined') return null;
     
-    const userJson = localStorage.getItem('kahve360_user');
+    const userJson = localStorage.getItem('cafeconnect_user');
     if (!userJson) return null;
     
     try {
@@ -111,7 +111,7 @@ const authService = {
   // Kullanıcı oturumunu kontrol et
   isAuthenticated: (): boolean => {
     if (typeof window === 'undefined') return false;
-    return !!localStorage.getItem('kahve360_token');
+    return !!localStorage.getItem('cafeconnect_token');
   },
 };
 

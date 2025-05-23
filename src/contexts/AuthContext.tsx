@@ -8,12 +8,14 @@ interface User {
   email: string;
   phone?: string;
   profileImage?: string;
+  role: 'admin' | 'user';
 }
 
 // Kimlik doğrulama bağlamı için tip
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<User>;
   register: (name: string, email: string, password: string) => Promise<User>;
   logout: () => void;
@@ -24,6 +26,7 @@ interface AuthContextType {
 const defaultContext: AuthContextType = {
   user: null,
   loading: true,
+  isAdmin: false,
   login: async () => { throw new Error('AuthContext henüz başlatılmadı'); },
   register: async () => { throw new Error('AuthContext henüz başlatılmadı'); },
   logout: () => {},
@@ -40,15 +43,20 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   // Sayfa yüklendiğinde oturum durumunu kontrol et
   useEffect(() => {
     // Gerçek uygulamada, burada localStorage veya JWT token kontrolü yapılır
     const checkAuth = () => {
-      const storedUser = localStorage.getItem('kahve360_user');
+      const storedUser = localStorage.getItem('cafeconnect_user');
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        
+        // Kullanıcı admin mi kontrol et
+        setIsAdmin(parsedUser.role === 'admin');
       }
       setLoading(false);
     };
@@ -66,18 +74,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Şimdilik demo için simüle ediyoruz
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Admin kullanıcısı için özel kontrol
+      const isAdminUser = email === 'admin@cafeconnect.com' && password === 'admin123';
+      
       // Demo kullanıcı - test için her zaman başarılı giriş yapıyoruz
       const demoUser: User = {
         id: '1',
-        name: 'Demo Kullanıcı',
+        name: isAdminUser ? 'Admin Kullanıcı' : 'Demo Kullanıcı',
         email: email,
         phone: '+90 555 123 4567',
-        profileImage: '/profile-demo.png'
+        profileImage: '/profile-demo.png',
+        role: isAdminUser ? 'admin' : 'user'
       };
       
       // Kullanıcı bilgilerini kaydet
-      localStorage.setItem('kahve360_user', JSON.stringify(demoUser));
+      localStorage.setItem('cafeconnect_user', JSON.stringify(demoUser));
       setUser(demoUser);
+      setIsAdmin(demoUser.role === 'admin');
       console.log('AuthContext: Kullanıcı girişi başarılı', demoUser);
       
       // Başarılı giriş mesajı
@@ -106,12 +119,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: name,
         email: email,
         phone: '+90 555 123 4567',
-        profileImage: '/profile-demo.png'
+        profileImage: '/profile-demo.png',
+        role: 'user' // Yeni kayıtlar varsayılan olarak normal kullanıcıdır
       };
       
       // Kullanıcı bilgilerini kaydet
-      localStorage.setItem('kahve360_user', JSON.stringify(demoUser));
+      localStorage.setItem('cafeconnect_user', JSON.stringify(demoUser));
       setUser(demoUser);
+      setIsAdmin(false); // Yeni kayıtlar asla admin değildir
       console.log('AuthContext: Kullanıcı kaydı başarılı', demoUser);
       
       // Başarılı kayıt mesajı
@@ -126,8 +141,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Çıkış fonksiyonu
   const logout = () => {
-    localStorage.removeItem('kahve360_user');
+    localStorage.removeItem('cafeconnect_user');
     setUser(null);
+    setIsAdmin(false);
     router.push('/');
   };
 
@@ -154,6 +170,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value = {
     user,
     loading,
+    isAdmin,
     login,
     register,
     logout,

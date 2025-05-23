@@ -6,35 +6,68 @@ import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-// Demo kullanıcı listesi
-const demoUsers = [
-  { id: '1', name: 'Demo Kullanıcı', email: 'demo@example.com', phone: '+90 555 123 4567', role: 'admin', status: 'active', createdAt: '2025-04-15' },
-  { id: '2', name: 'Ali Yılmaz', email: 'ali@example.com', phone: '+90 555 234 5678', role: 'user', status: 'active', createdAt: '2025-04-20' },
-  { id: '3', name: 'Ayşe Demir', email: 'ayse@example.com', phone: '+90 555 345 6789', role: 'user', status: 'active', createdAt: '2025-04-25' },
-  { id: '4', name: 'Mehmet Kaya', email: 'mehmet@example.com', phone: '+90 555 456 7890', role: 'user', status: 'inactive', createdAt: '2025-05-01' },
-  { id: '5', name: 'Zeynep Şahin', email: 'zeynep@example.com', phone: '+90 555 567 8901', role: 'user', status: 'active', createdAt: '2025-05-05' },
-];
+// Kullanıcı tipi tanımı
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'admin' | 'user';
+  status: 'active' | 'inactive';
+  createdAt: string;
+}
 
 export default function UserManagement() {
-  const [users, setUsers] = useState(demoUsers);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isAdminState, setIsAdminState] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const router = useRouter();
   
+  // Kullanıcıları API'den getir
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch('/api/users');
+      
+      if (!response.ok) {
+        throw new Error('Kullanıcılar getirilirken bir hata oluştu');
+      }
+      
+      const data = await response.json();
+      setUsers(data.data);
+    } catch (err) {
+      setError('Kullanıcılar yüklenirken bir hata oluştu: ' + (err as Error).message);
+      console.error('Kullanıcıları getirme hatası:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    // Gerçek uygulamada, kullanıcının admin olup olmadığını kontrol et
-    if (user) {
-      // Demo için her giriş yapmış kullanıcıyı admin kabul ediyoruz
-      setIsAdmin(true);
-    } else {
+    // Kullanıcının admin olup olmadığını kontrol et
+    if (!user) {
       // Kullanıcı giriş yapmamışsa giriş sayfasına yönlendir
       router.push('/auth/login?returnUrl=/admin/users');
+      return;
     }
-  }, [user, router]);
+    
+    if (isAdmin) {
+      setIsAdminState(true);
+      // Kullanıcıları getir
+      fetchUsers();
+    } else {
+      // Admin olmayan kullanıcıları ana sayfaya yönlendir
+      alert('Bu sayfaya erişim yetkiniz bulunmamaktadır. Sadece admin kullanıcıları erişebilir.');
+      router.push('/');
+    }
+  }, [user, isAdmin, router]);
   
   // Kullanıcıları filtrele
   const filteredUsers = users.filter(user => {
@@ -53,27 +86,75 @@ export default function UserManagement() {
     return matchesSearch && matchesStatus && matchesRole;
   });
   
+
+  
   // Kullanıcı silme fonksiyonu
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = async (userId: string) => {
     if (window.confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) {
-      setUsers(users.filter(user => user.id !== userId));
+      try {
+        const response = await fetch(`/api/users/${userId}`, {
+          method: 'DELETE',
+        });
+        
+        if (!response.ok) {
+          throw new Error('Kullanıcı silinirken bir hata oluştu');
+        }
+        
+        // Kullanıcı listesini güncelle
+        setUsers(users.filter(user => user.id !== userId));
+        alert('Kullanıcı başarıyla silindi');
+      } catch (err) {
+        alert('Kullanıcı silinirken bir hata oluştu: ' + (err as Error).message);
+        console.error('Kullanıcı silme hatası:', err);
+      }
     }
   };
   
   // Kullanıcı durumunu değiştirme fonksiyonu
-  const handleToggleStatus = (userId: string) => {
-    setUsers(users.map(user => {
-      if (user.id === userId) {
-        return {
-          ...user,
-          status: user.status === 'active' ? 'inactive' : 'active'
-        };
+  const handleToggleStatus = async (userId: string) => {
+    try {
+      // İlgili kullanıcıyı bul
+      const userToUpdate = users.find(user => user.id === userId);
+      
+      if (!userToUpdate) return;
+      
+      // Yeni durumu belirle
+      const newStatus = userToUpdate.status === 'active' ? 'inactive' : 'active';
+      
+      // API'ye güncelleme isteği gönder
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: newStatus
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Kullanıcı durumu güncellenirken bir hata oluştu');
       }
-      return user;
-    }));
+      
+      // Kullanıcı listesini güncelle
+      setUsers(users.map(user => {
+        if (user.id === userId) {
+          return {
+            ...user,
+            status: newStatus
+          };
+        }
+        return user;
+      }));
+    } catch (err) {
+      alert('Kullanıcı durumu güncellenirken bir hata oluştu: ' + (err as Error).message);
+      console.error('Kullanıcı durumu güncelleme hatası:', err);
+    }
   };
   
-  if (!isAdmin) {
+
+  
+  if (!isAdminState) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -81,7 +162,7 @@ export default function UserManagement() {
           <div className="container">
             <div className="bg-white p-8 rounded-xl shadow-sm">
               <h1 className="text-2xl font-bold text-primary mb-4">Yükleniyor...</h1>
-              <p className="text-gray-600">Admin paneli yükleniyor, lütfen bekleyin.</p>
+              <p className="text-gray-600">Kullanıcı yönetimi paneli yükleniyor, lütfen bekleyin.</p>
             </div>
           </div>
         </main>
@@ -93,8 +174,8 @@ export default function UserManagement() {
   return (
     <>
       <Head>
-        <title>Kullanıcı Yönetimi - Kahve360 Admin</title>
-        <meta name="description" content="Kahve360 Kullanıcı Yönetimi" />
+        <title>Kullanıcı Yönetimi - CafeConnect Admin</title>
+        <meta name="description" content="CafeConnect Kullanıcı Yönetimi" />
       </Head>
       
       <div className="flex flex-col min-h-screen">
@@ -154,22 +235,39 @@ export default function UserManagement() {
               </div>
               
               {/* Kullanıcı Tablosu */}
-              <div className="overflow-x-auto">
-                <table className="w-full table-auto">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">ID</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">İsim</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">E-posta</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Telefon</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Rol</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Durum</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Kayıt Tarihi</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">İşlemler</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredUsers.map(user => (
+              {isLoading ? (
+                <div className="text-center py-10">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-4"></div>
+                  <p className="text-gray-600">Kullanıcılar yükleniyor...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-10">
+                  <div className="text-red-500 mb-2">❌</div>
+                  <p className="text-red-500">{error}</p>
+                  <button 
+                    className="btn btn-sm btn-primary mt-4"
+                    onClick={fetchUsers}
+                  >
+                    Tekrar Dene
+                  </button>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full table-auto">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">ID</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">İsim</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">E-posta</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Telefon</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Rol</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Durum</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Kayıt Tarihi</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">İşlemler</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredUsers.map(user => (
                       <tr key={user.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm text-gray-500">{user.id}</td>
                         <td className="px-4 py-3 text-sm font-medium text-gray-900">{user.name}</td>

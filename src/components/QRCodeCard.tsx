@@ -12,7 +12,7 @@ const QRCodeCard = ({ cardId, brand, userId }: QRCodeCardProps) => {
   
   // QR kodun içeriği (gerçek uygulamada bu daha karmaşık bir veri yapısı olabilir)
   const qrValue = JSON.stringify({
-    app: 'Kahve360',
+    app: 'CafeConnect',
     cardId,
     brand,
     userId,

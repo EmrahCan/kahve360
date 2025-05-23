@@ -41,8 +41,8 @@ export default function Login() {
   return (
     <>
       <Head>
-        <title>Giriş Yap - Kahve360</title>
-        <meta name="description" content="Kahve360 hesabınıza giriş yapın" />
+        <title>Giriş Yap - CafeConnect</title>
+        <meta name="description" content="CafeConnect hesabınıza giriş yapın" />
       </Head>
       
       <div className="flex flex-col min-h-screen">
@@ -52,7 +52,7 @@ export default function Login() {
           <div className="container max-w-md mx-auto">
             <div className="bg-white rounded-xl shadow-sm p-8">
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-primary mb-2">Kahve360'a Hoş Geldiniz</h1>
+                <h1 className="text-2xl font-bold text-primary mb-2">CafeConnect'a Hoş Geldiniz</h1>
                 <p className="text-gray-600">
                   Hesabınıza giriş yaparak tüm kahve markalarını tek uygulamada yönetin.
                 </p>

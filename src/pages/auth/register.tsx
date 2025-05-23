@@ -55,8 +55,8 @@ export default function Register() {
   return (
     <>
       <Head>
-        <title>Kayıt Ol - Kahve360</title>
-        <meta name="description" content="Kahve360'a üye olun ve tüm kahve markalarını tek uygulamada yönetin" />
+        <title>Kayıt Ol - CafeConnect</title>
+        <meta name="description" content="CafeConnect'a üye olun ve tüm kahve markalarını tek uygulamada yönetin" />
       </Head>
       
       <div className="flex flex-col min-h-screen">
@@ -66,7 +66,7 @@ export default function Register() {
           <div className="container max-w-md mx-auto">
             <div className="bg-white rounded-xl shadow-sm p-8">
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-primary mb-2">Kahve360'a Üye Olun</h1>
+                <h1 className="text-2xl font-bold text-primary mb-2">CafeConnect'a Üye Olun</h1>
                 <p className="text-gray-600">
                   Ücretsiz üyelik ile tüm kahve markalarını tek uygulamada yönetin.
                 </p>

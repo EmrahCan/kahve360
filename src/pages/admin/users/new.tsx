@@ -7,7 +7,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 export default function NewUser() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminState, setIsAdminState] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -18,19 +18,25 @@ export default function NewUser() {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const router = useRouter();
   
   useEffect(() => {
-    // Gerçek uygulamada, kullanıcının admin olup olmadığını kontrol et
-    if (user) {
-      // Demo için her giriş yapmış kullanıcıyı admin kabul ediyoruz
-      setIsAdmin(true);
-    } else {
+    // Kullanıcının admin olup olmadığını kontrol et
+    if (!user) {
       // Kullanıcı giriş yapmamışsa giriş sayfasına yönlendir
       router.push('/auth/login?returnUrl=/admin/users/new');
+      return;
     }
-  }, [user, router]);
+    
+    if (isAdmin) {
+      setIsAdminState(true);
+    } else {
+      // Admin olmayan kullanıcıları ana sayfaya yönlendir
+      alert('Bu sayfaya erişim yetkiniz bulunmamaktadır. Sadece admin kullanıcıları erişebilir.');
+      router.push('/');
+    }
+  }, [user, isAdmin, router]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,17 +61,29 @@ export default function NewUser() {
       setError('');
       setIsLoading(true);
       
-      // Gerçek uygulamada, burada API çağrısı yapılır
-      // Şimdilik demo için simüle ediyoruz
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log('Yeni kullanıcı oluşturuldu:', {
-        name,
-        email,
-        phone,
-        password,
-        role
+      // API'ye yeni kullanıcı ekleme isteği gönder
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          password, // Not: Gerçek uygulamada şifre güvenli bir şekilde işlenmelidir
+          role,
+          status: 'active'
+        }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Kullanıcı oluşturulurken bir hata oluştu');
+      }
+      
+      const data = await response.json();
+      console.log('Yeni kullanıcı oluşturuldu:', data.data);
       
       // Başarılı mesajı göster
       setSuccess(true);
@@ -85,13 +103,13 @@ export default function NewUser() {
       
     } catch (err) {
       console.error('Kullanıcı oluşturma hatası:', err);
-      setError('Kullanıcı oluşturulamadı. Lütfen daha sonra tekrar deneyin.');
+      setError('Kullanıcı oluşturulamadı: ' + (err as Error).message);
     } finally {
       setIsLoading(false);
     }
   };
   
-  if (!isAdmin) {
+  if (!isAdminState) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -111,8 +129,8 @@ export default function NewUser() {
   return (
     <>
       <Head>
-        <title>Yeni Kullanıcı Ekle - Kahve360 Admin</title>
-        <meta name="description" content="Kahve360 Yeni Kullanıcı Ekleme" />
+        <title>Yeni Kullanıcı Ekle - CafeConnect Admin</title>
+        <meta name="description" content="CafeConnect Yeni Kullanıcı Ekleme" />
       </Head>
       
       <div className="flex flex-col min-h-screen">
